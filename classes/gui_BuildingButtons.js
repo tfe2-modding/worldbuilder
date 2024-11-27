@@ -10,7 +10,11 @@ gui_BuildingButtons.prototype.createBuildingCategoryButtons = function(orig) {
 					description: e.description+"\nAlt+Click or Middle Click to pan the screen with this selected.",
 					sprite: graphics_WorldImage.makeWorldSprite(new random_SeedeableRandom(), 100, 40, e.appearance).sprite.texture,
 					onClick: ()=>{
-						this.city.builder = new Builder(this.city, this.city.builderStage, BuilderType.Island(e));
+						if (this.city.builder && this.city.builder.builderType._hx_index == BuilderType.Island._hx_index && this.city.builder.builderType.islandInfo == e) {
+							this.city.builder.cancel()
+						} else {
+							this.city.builder = new Builder(this.city, this.city.builderStage, BuilderType.Island(e))
+						}
 					},
 					isActive: ()=>{
 						return this.city.builder && this.city.builder.builderType.islandInfo == e
@@ -18,7 +22,7 @@ gui_BuildingButtons.prototype.createBuildingCategoryButtons = function(orig) {
 					buttonSprite: "spr_islandbutton",
 				}
 			})
-			worldsButton = this.addCategoryDropdown("Island", "Floating islands you can build on and your citizens stand on.", null, "spr_icon_island", ()=>{
+			worldsButton = this.addCategoryDropdown("Islands", "Floating islands you can build on and your citizens stand on.", null, "spr_icon_island", ()=>{
 				this.toggleCategoryDropdown("Worlds", worldsButton, worldButtonList)
 			})
 			let buildingsButton
@@ -57,7 +61,7 @@ gui_BuildingButtons.prototype.createBuildingCategoryButtons = function(orig) {
 				} else {
 					return this.addBuildingButton.bind(this, $hxClasses["buildings."+e.className], progress_UnlockState.Researched)
 				}
-			}), "spr_icon_findbuilding", ()=>{
+			}), "spr_icon_buildings", ()=>{
 				this.toggleCategoryDropdown("Building Categories", buildingsButton, [
 					...categories.filter(e=>Resources.buildingInfoArray.findIndex(b=>b.category.split("_").pop() == e.name)>-1).map(e=>({
 						name: e.displayName,
@@ -99,8 +103,14 @@ gui_BuildingButtons.prototype.createBuildingCategoryButtons = function(orig) {
 			resourceList.push(this.addWorldResourceButton.bind(this, {
 				className: "AlienRuins",
 				name: common_Localize.lo("alien_ruins"),
-				description: "Ancient ruins that can have valueable resources or alien technology hidden in them.",
+				description: "Ancient ruins that can have valueable resources hidden in them.",
 				textureName: "spr_alienruins_2"
+			}))
+			resourceList.push(this.addWorldResourceButton.bind(this, {
+				className: "ComputerAlienRuins",
+				name: "Computer Alien Ruins",
+				description: "Ancient ruins that can have alien technology hidden in them.",
+				textureName: "spr_alienruins_3"
 			}))
 			let worldResourcesButton
 			worldResourcesButton = this.addCategoryDropdown("World Resources", common_Localize.lo("categories/Decoration & Nature.description"), null, "spr_nature", ()=>{
@@ -180,7 +190,7 @@ gui_BuildingButtons.prototype.createBuildingCategoryButtons = function(orig) {
 			updateBuildingMode(this.city, false)
 			this.addManagementButtons();
 			// this.addCategoryDropdown("Goals", "Edit scenario objectives and tasks.", null, "spr_icon_goals", ()=>{})
-			this.addCategoryDropdown("Export", "Export this island configuration as a scenario JSON file.", null, "spr_icon_export", ()=>{
+			this.addCategoryDropdown("Export", "Export this island configuration as a scenario.", null, "spr_icon_export", ()=>{
 				this.city.worldBuilder.createExportWindow()
 			}, null, ()=>this.city.gui.windowRelatedTo=="exportAsScenario")
 		} else orig.call(this)

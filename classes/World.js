@@ -145,6 +145,12 @@ World.prototype.destroy = function() {
 		if (this.city.simulation.citizens[i].onWorld == this) this.city.simulation.citizens[i].tryRemove(true)
 	}
 	this.city.worlds.splice(this.city.worlds.indexOf(this), 1)
+	var bottomWorld = common_ArrayExtensions.whereMax(this.city.worlds,function(wrld) {
+		return wrld.rect.height == 0;
+	},function(wrld) {
+		return wrld.rect.width;
+	});
+	bottomWorld.updateVerticalPositioningOfInvisibleWorld()
 	if (this.city.simulation.winter) {
 		let i = this.city.furtherForegroundStage.children.length
 		while (i > 0) {
@@ -155,5 +161,33 @@ World.prototype.destroy = function() {
 			}
 		}
 		this.city.simulation.winter.snow.hasCreated = false
+	}
+}
+
+World.prototype.updateVerticalPositioningOfInvisibleWorld = function() {
+	let max
+	for (let i = 0; i < this.city.worlds.length; i++) {
+		let world = this.city.worlds[i]
+		if (this == world) continue
+		if (max == null || max < world.rect.y + world.rect.height + 100) {
+			max = world.rect.y + world.rect.height + 100
+		}
+	}
+	while (max > this.rect.y) {
+		this.rect.y += 20
+		for (let x = 0; x < this.permanents.length; x++) {
+			if (this.permanents[x].length > 0) this.permanents[x].splice(0, 0, null)
+		}
+	}
+	downRoutine: while (max < this.rect.y) {
+		for (let x = 0; x < this.permanents.length; x++) {
+			if (this.permanents[x].length > 0) {
+				if (this.permanents[x][0] != null) break downRoutine
+			}
+		}
+		for (let x = 0; x < this.permanents.length; x++) {
+			if (this.permanents[x].length > 0) this.permanents[x].splice(0, 1)
+		}
+		this.rect.y -= 20
 	}
 }

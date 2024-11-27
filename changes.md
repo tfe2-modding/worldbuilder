@@ -1,0 +1,6 @@
+- fixed a bug where building islands far down would make it impossible to build floating platforms near them
+- added computer alien ruins from the hackers scenario to the world resources menu
+- added a button in the new city menu to create a city with no worlds and no objectives
+- added several flags and settings to the export scenario window
+- redrew all the icons to fit the vanilla game better
+- clicking on an island type in the build menu that you already had selected now deselects it to match with the rest of the game

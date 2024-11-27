@@ -1,0 +1,21 @@
+{
+	"startGoal": "",
+	"goals": [],
+	"initialMaterials": {},
+	"worlds": [
+		{
+			"rect": {
+				"x": -20,
+				"y": 0,
+				"width": 40,
+				"height": 20
+			},
+			"seed": 1e309,
+			"worldResources": [],
+			"buildingStacks": [],
+			"citizens": [],
+			"decoration": "spr_grass",
+			"appearance": ""
+		}
+	]
+}

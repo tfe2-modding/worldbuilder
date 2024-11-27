@@ -247,7 +247,8 @@ Something important worth noting is that this mod is very early in development, 
 			gui.windowAddBottomButtons()
 			return
 		}
-		gui.windowAddInfoText("This menu will export the current save file as a scenario JSON file.")
+		gui.windowAddInfoText("This menu will export the current save file as a scenario.")
+		gui.windowInner.addChild(new gui_GUISpacing(gui.windowInner,new common_Point(2,8)))
 		let settings = {
 			individualCitizens: false,
 			flags: {
@@ -255,7 +256,6 @@ Something important worth noting is that this mod is very early in development, 
 				disableDestroy: false,
 				happinessEnthusiasmLevel: 0,
 				hiddenBoost: false,
-				isBuildableAliens: false,
 				disableRocket: false,
 			},
 			lockPermanents: [],
@@ -264,10 +264,51 @@ Something important worth noting is that this mod is very early in development, 
 			backgroundSprites: [],
 			speedUpStartNights: false,
 			useInviteCitizens: true,
-			title: "Custom Scenario",
-			text: "This is the default text for the first goal after exporting from WorldBuilder. The only reason this is here is because you have to have text at the start of a scenario if you configure flags.",
 		}
-		this.city.gui.windowInner.addChild(new gui_GUISpacing(this.city.gui.windowInner,new common_Point(2,4)))
+
+		let createSettingCheckbox = function(settings, key, text, description=false, invert=false) {
+			let stage = gui.innerWindowStage
+			let parent = gui.windowInner
+			let isChecked = invert ? (()=>!settings[key]) : (()=>settings[key])
+			var containerButton = new gui_CheckboxButton(gui,stage,parent,()=>settings[key] = !settings[key],isChecked);
+			if (description) containerButton.onHover = ()=>gui.tooltip.setText(containerButton,description,text)
+			var infoContainer = containerButton.container;
+			infoContainer.padding.top = 3;
+			infoContainer.padding.left = 3;
+			infoContainer.padding.right = 3;
+			infoContainer.padding.bottom = 1;
+			infoContainer.fillSecondarySize = true;
+			if(Main.isMobile) {
+				infoContainer.padding.top += 2;
+				infoContainer.padding.bottom += 2;
+			}
+			var checkboxTextures = Resources.getTextures("spr_checkbox",2);
+			var spr = new PIXI.Sprite(checkboxTextures[1]);
+			var spriteContainerHolder = new gui_ContainerHolder(infoContainer,gui.innerWindowStage,spr,{ left : 0, right : 3, top : 0, bottom : 0},function() {
+				var checkboxTextures1 = checkboxTextures;
+				var spriteContainerHolder = isChecked() ? 0 : 1;
+				spr.texture = checkboxTextures1[spriteContainerHolder];
+			});
+			infoContainer.addChild(spriteContainerHolder);
+			infoContainer.addChild(new gui_TextElement(infoContainer,gui.innerWindowStage,text));
+			parent.addChild(containerButton);
+			parent.addChild(new gui_GUISpacing(parent,new common_Point(2,2)))
+		};
+
+		gui.windowAddInfoText("General settings")
+		createSettingCheckbox(settings, "isFreePlay", "Free play")
+		createSettingCheckbox(settings, "useInviteCitizens", "Allow inviting citizens")
+		createSettingCheckbox(settings, "individualCitizens", "Group citizens", "This will export citizens on each world as one randomized group rather than storing exact ages and positions.", true)
+		createSettingCheckbox(settings, "speedUpStartNights", "Speed up start nights", "This will cause the first 3 nights to pass at a much quicker pace than normal.")
+		gui.windowInner.addChild(new gui_GUISpacing(gui.windowInner,new common_Point(2,8)))
+
+		gui.windowAddInfoText("Flags")
+		createSettingCheckbox(settings.flags, "disableDying", "Disable citizens dying", "Citizens will live forever when this setting is enabled.")
+		createSettingCheckbox(settings.flags, "disableDestroy", "Disable destroying buildings")
+		createSettingCheckbox(settings.flags, "hiddenBoost", "Extra production boost", "Makes citizens work faster than normal.")
+		createSettingCheckbox(settings.flags, "disableRocket", "Disable rocket", "Disables building the rocket entirely.")
+		gui.windowInner.addChild(new gui_GUISpacing(gui.windowInner,new common_Point(2,8)))
+
 		gui.windowAddBottomButtons([
 			{
 				text: "Export to File",
@@ -358,6 +399,7 @@ Something important worth noting is that this mod is very early in development, 
 				link: sname+".json",
 				name: sname,
 				description: description,
+				freePlay: settings.isFreePlay,
 			}
 			let scenario = this.exportAsScenario(settings)
 			fs.writeFileSync(path.join(modPath, "stories.json"), JSON.stringify(stories, null, "\t"))
@@ -453,6 +495,8 @@ Something important worth noting is that this mod is very early in development, 
 		scenario.backgroundSprites = settings.backgroundSprites
 		scenario.speedUpStartNights = settings.speedUpStartNights
 		scenario.useInviteCitizens = settings.useInviteCitizens
+		let left = Infinity
+		let right = -Infinity
 		for (const [k, v] of Object.entries(this.materials)) {
 			scenario.initialMaterials[k] = v
 		}
@@ -517,7 +561,10 @@ Something important worth noting is that this mod is very early in development, 
 			if (world.isProtectedKey) data.protectedKey = true
 			if (world.isUnbuildableFromAliens) data.unbuildableAliens = true
 			scenario.worlds.push(data)
+			left = Math.min(left, world.rect.x)
+			right = Math.max(right, world.rect.x + world.rect.width)
 		}
+		scenario.viewStartX = (left + right) / 2
 		for (let i = 0; i < this.city.simulation.citizens.length; i++) {
 			let citizen = this.city.simulation.citizens[i]
 			if (citizen.onWorld) {
@@ -585,8 +632,13 @@ Something important worth noting is that this mod is very early in development, 
 }
 
 // this should be in a beforeCityCreate but that doesn't exist
-ModTools.onCityCreate(function(city) {
+ModTools[Object.hasOwnProperty(ModTools, "beforeCityCreate") ? "beforeCityCreate" : "onCityCreate"](function(city) {
 	city.worldBuilder = new WorldBuilder(city)
+	if (city.worlds[0] && city.worlds[0].seed == 1e309) {
+		city.worlds[0].destroy()
+		city.worldBuilder.setEnabled(true)
+		city.cachedCityEdges = {minX: 0, maxX: 0, minY: 0, maxY: 20}
+	}
 })
 
 ModTools.onCityUpdate(function(city, timeMod) {

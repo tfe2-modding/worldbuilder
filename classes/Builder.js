@@ -265,6 +265,7 @@ Builder.prototype.handleMouse = function(orig) {
 						if(right >= bottomWorld.rect.x) {
 							bottomWorld.resizeInvisibleWorld(bottomWorld.rect.x,right - bottomWorld.rect.x + 20);
 						}
+						bottomWorld.updateVerticalPositioningOfInvisibleWorld()
 						this.city.connections.updateCityConnections();
 						this.city.simulation.updatePathfinder(true);
 					} else {
