@@ -82,7 +82,7 @@ class WorldBuilder {
 		let controls = []
 		// they are only out of order because of knowledge being at the end. hopefully this never changes
 		let materialNames = Array.from(MaterialsHelper.materialNames)
-		materialNames.splice(3, 0, materialNames.pop())
+		materialNames.splice(3, 0, materialNames.splice(materialNames.length - 1 - MaterialsHelper.modMaterials.length, 1)[0])
 		for (let i = 0; i < materialNames.length; i++) {
 			let k = materialNames[i]
 			if (k == "cacao" || k == "chocolate") continue
